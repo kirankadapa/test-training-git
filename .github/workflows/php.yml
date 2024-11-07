@@ -1,4 +1,4 @@
-name: PHP Composer
+name: PHP Composer with Magento SQLite Setup
 
 on:
   push:
@@ -14,9 +14,11 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v3
+    # Checkout the repository
+    - name: Checkout code
+      uses: actions/checkout@v3
 
-    # Cache Composer packages to speed up installation
+    # Cache Composer dependencies
     - name: Cache Composer packages
       id: composer-cache
       uses: actions/cache@v3
@@ -32,32 +34,38 @@ jobs:
         COMPOSER_AUTH: ${{ secrets.COMPOSER_AUTH }}
       run: composer install --prefer-dist --no-progress --no-scripts --no-interaction
 
-    # Install required PHP extensions and SQLite
+    # Install required PHP extensions including SQLite
     - name: Install PHP and required extensions
       run: |
         sudo apt-get update
         sudo apt-get install -y php-cli php-mbstring php-xml php-bcmath php-curl \
           php-intl php-zip php-soap php-xsl sqlite3 php-sqlite3
 
-    # Create SQLite database directory
-    - name: Create SQLite database directory
+    # Create SQLite database directory and database file
+    - name: Setup SQLite database
       run: |
         mkdir -p var/database
         touch var/database/magento.db
         chmod 777 var/database/magento.db
-        ls -al var/database && pwd
+        ls -al var/database
 
-    # Configure Magento for SQLite
+    # Configure Magento and run installation
     - name: Install Magento
       run: |
-        php bin/magento setup:install --base-url=http://localhost \
-          --db-name=/home/runner/work/test-training-git/test-training-git/var/database/magento.db \
-          --db-user=magento --db-password=magento --admin-firstname=Admin \
-          --admin-lastname=Admin --admin-email=admin@example.com \
-          --admin-user=admin --admin-password=admin123 --language=en_US \
-          --currency=USD --timezone=America/New_York --use-rewrites=1 \
+        php bin/magento setup:install \
+          --base-url=http://localhost \
+          --db-name=var/database/magento.db \
+          --admin-firstname=Admin \
+          --admin-lastname=Admin \
+          --admin-email=admin@example.com \
+          --admin-user=admin \
+          --admin-password=admin123 \
+          --language=en_US \
+          --currency=USD \
+          --timezone=America/New_York \
+          --use-rewrites=1 \
           --db-engine=sqlite
 
-    # Run test suite
+    # Run PHPUnit tests
     - name: Run test suite
       run: vendor/bin/phpunit --configuration dev/tests/unit/phpunit.xml.dist --filter XsdTest
