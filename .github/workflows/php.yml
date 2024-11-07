@@ -45,7 +45,7 @@ jobs:
         mkdir -p var/database
         touch var/database/magento.db
         chmod 777 var/database/magento.db
-        var/database/ ls -al && pwd
+        ls -al var/database && pwd
 
     # Configure Magento for SQLite
     - name: Install Magento
