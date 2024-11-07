@@ -33,19 +33,23 @@ jobs:
         COMPOSER_AUTH: ${{ secrets.COMPOSER_AUTH }}
       run: composer install --prefer-dist --no-progress --no-scripts --no-interaction
 
-    # Install Magento
-    - name: Install Magento
+    # Install PHP and SQLite if not available
+    - name: Install PHP and SQLite
       run: |
-        # Ensure PHP extensions for Magento
+        sudo apt-get update
         sudo apt-get install -y php-mbstring php-xml php-bcmath php-curl php-intl php-zip php-soap php-xsl sqlite3
-        # Download Magento
-        composer create-project --repository=https://repo.magento.com/ magento/project-community-edition .
-        
-        # Create SQLite database
+
+    # Set up SQLite Database (use SQLite instead of MySQL)
+    - name: Set up SQLite database
+      run: |
+        # Create SQLite database for Magento
         touch var/database/magento.db
         chmod 777 var/database/magento.db
 
-        # Set up Magento with SQLite (use SQLite instead of MySQL)
+    # Configure Magento for SQLite
+    - name: Install Magento
+      run: |
+        # Ensure Magento is configured to use SQLite as the database
         php bin/magento setup:install --base-url=http://localhost \
           --db-host=localhost --db-name=var/database/magento.db \
           --db-user=magento --db-password=magento --admin-firstname=Admin \
