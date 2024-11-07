@@ -51,7 +51,7 @@ jobs:
     - name: Install Magento
       run: |
         php bin/magento setup:install --base-url=http://localhost \
-          --db-host=localhost --db-name=/home/runner/work/test-training-git/test-training-git/var/database/magento.db \
+          --db-name=/home/runner/work/test-training-git/test-training-git/var/database/magento.db \
           --db-user=magento --db-password=magento --admin-firstname=Admin \
           --admin-lastname=Admin --admin-email=admin@example.com \
           --admin-user=admin --admin-password=admin123 --language=en_US \
