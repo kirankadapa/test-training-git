@@ -17,6 +17,7 @@ jobs:
     steps:
     - uses: actions/checkout@v3
 
+    # Cache Composer packages to speed up installation
     - name: Cache Composer packages
       id: composer-cache
       uses: actions/cache@v3
@@ -26,10 +27,32 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-php-
 
+    # Install Composer dependencies
     - name: Install dependencies
       env:
         COMPOSER_AUTH: ${{ secrets.COMPOSER_AUTH }}
       run: composer install --prefer-dist --no-progress --no-scripts --no-interaction
 
+    # Install Magento
+    - name: Install Magento
+      run: |
+        # Ensure PHP extensions for Magento
+        sudo apt-get install -y php-mbstring php-xml php-bcmath php-curl php-intl php-zip php-soap php-xsl sqlite3
+        # Download Magento
+        composer create-project --repository=https://repo.magento.com/ magento/project-community-edition .
+        
+        # Create SQLite database
+        touch var/database/magento.db
+        chmod 777 var/database/magento.db
+
+        # Set up Magento with SQLite (use SQLite instead of MySQL)
+        php bin/magento setup:install --base-url=http://localhost \
+          --db-host=localhost --db-name=var/database/magento.db \
+          --db-user=magento --db-password=magento --admin-firstname=Admin \
+          --admin-lastname=Admin --admin-email=admin@example.com \
+          --admin-user=admin --admin-password=admin123 --language=en_US \
+          --currency=USD --timezone=America/New_York --use-rewrites=1
+
+    # Run test suite
     - name: Run test suite
       run: vendor/bin/phpunit --configuration dev/tests/unit/phpunit.xml.dist --filter XsdTest
